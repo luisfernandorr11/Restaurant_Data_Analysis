@@ -8,20 +8,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- SYSTEM INITIALIZATION & CORE CONFIGURATION ---
-# Pulls the database URL securely from environment variables
+# Pulls the database url
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
     print("[ERROR] DATABASE_URL is not set in the environment variables.", file=sys.stderr)
     sys.exit(1)
 
-# Establish active target connection engine pool instance
+# activating target connection
 engine = create_engine(DATABASE_URL)
 
-# --- DIRECTORY MAPPING ---
+# directory
 BASE_DIR = os.path.expanduser("~/Documents/AZTECA SQL PROJECT")
 
-# --- SCHEMA REGISTRY & EXTRACT-TRANSFORM-LOAD (ETL) PIPELINE ---
+# table names in sql queries
 data_registry = {
     "summary_sales_data": [],
     "category_sales_summary": [],
@@ -36,7 +36,7 @@ data_registry = {
 
 print("[INFO] Initializing filesystem traversal and schema ingestion arrays...")
 
-# Step 1: Sequential Extraction and Metadata Mapping Lifecycle
+# Step 1: extraction and mapping
 for root, _, files in os.walk(BASE_DIR):
     current_directory = os.path.basename(root)
     
@@ -46,7 +46,7 @@ for root, _, files in os.walk(BASE_DIR):
             file_path = os.path.join(root, file)
             target_table = None
             
-            # Complex string matrix pattern-matching array routing rules
+            # string matching
             if "sales" in file_lower or "net_sales" in file_lower or "totals" in file_lower:
                 if "category" in file_lower:
                     target_table = "category_sales_summary"
@@ -70,16 +70,16 @@ for root, _, files in os.walk(BASE_DIR):
             elif "item" in file_lower:
                 target_table = "staging_item_sales"
             
-            # Execute standard data parsing rules if a valid layout vector is isolated
+            # execute parsing rules
             if target_table:
                 try:
                     df = pd.read_csv(file_path)
                     
-                    # Standard structural layout schema normalization array
+                    
                     df.columns = df.columns.str.strip().str.lower()
                     df.columns = df.columns.str.replace(" ", "_").str.replace("%", "pct").str.replace("(", "").str.replace(")", "")
                     
-                    # Inject operational auditing metadata parameters
+                    # month parameters
                     df['source_month_folder'] = current_directory
                     df['source_file_name'] = file
                     
@@ -90,15 +90,15 @@ for root, _, files in os.walk(BASE_DIR):
 
 print("\n[INFO] Initializing transactional schema injection operations to target cloud storage...")
 
-# Step 2: Schema Reconciliation and Data Target Ingestion Lifecycle
+# ingestion coding
 for table_name, df_list in data_registry.items():
     if df_list:
         print(f"[LOAD] Restructuring relational layout map parameters for target: {table_name}")
         
-        # Cross-file schema merging resolves variable structural layout shifts across monthly blocks
+        # seperate data into months
         final_df = pd.concat(df_list, ignore_index=True, sort=False)
         
-        # Direct stream ingestion to cloud PostgreSQL server layers
+        # to postgre
         final_df.to_sql(name=table_name, con=engine, if_exists='replace', index=False)
         print(f"[SUCCESS] Target table operational footprint '{table_name}' synchronized. Total Rows: {len(final_df)}")
 
